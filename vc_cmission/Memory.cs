@@ -1,0 +1,207 @@
+﻿using System;
+using System.Text;
+using System.Runtime.InteropServices;
+using System.Diagnostics;
+
+namespace MemoryEdit
+{
+    class Memory
+    {
+        [DllImport("kernel32.dll")]
+        private static unsafe extern Boolean WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress,
+                                                                byte[] lpBuffer, UIntPtr nSize, uint lpNumberOfBytesWritten);
+        //import kernel32 and create OpenProcess and ReadProcess functions
+        [DllImport("kernel32.dll")]
+        static extern IntPtr OpenProcess(UInt32 dwDesiredAccess, Boolean bInheritHandle, UInt32 dwProcessId);
+        [DllImport("kernel32.dll")]
+        static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress,
+        byte[] lpBuffer, UIntPtr nSize, uint lpNumberOfBytesWritten);
+
+        //Create handle
+        IntPtr Handle;
+
+        public static bool IsProcessOpen(string name)
+        {
+            foreach (Process clsProcess in Process.GetProcesses())
+            {
+                if (clsProcess.ProcessName == name)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //constructor
+        public Memory(string sprocess, uint access)
+        {
+            //Get the specific process
+            Process[] Processes = Process.GetProcessesByName(sprocess);
+            Process nProcess = Processes[0];
+            //access to the process
+            //0x10 - read
+            //0x20 - write
+            //0x001F0FFF - all
+            Handle = OpenProcess(access, false, (uint)nProcess.Id);
+        }
+
+        //Memory reading
+
+        //Byte
+        public int ReadBytePointer(uint pointer, uint offset, int blen)
+        {
+            byte[] bytes = new byte[24];
+
+            //Creating the address (reading the Base and add the offset)
+            uint adress = (uint)Read(pointer) + offset;
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)adress, bytes, (UIntPtr)blen, 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToInt32(bytes, 0);
+            
+        }
+
+        public int ReadByte(uint pointer, int blen)
+        {
+            byte[] bytes = new byte[24];
+
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)pointer, bytes, (UIntPtr)blen, 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        //Float
+        public float ReadFloatPointer(uint pointer, uint offset)
+        {
+            byte[] bytes = new byte[24];
+
+            //Creating the address (reading the Base and add the offset)
+            uint adress = (uint)Read(pointer) + offset;
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)adress, bytes, (UIntPtr)sizeof(float), 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToSingle(bytes, 0);
+
+        }
+
+        public float ReadFloat(uint pointer)
+        {
+            byte[] bytes = new byte[24];
+
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)pointer, bytes, (UIntPtr)sizeof(float), 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToSingle(bytes, 0);
+        }
+
+        //Double
+        public double ReadDoublePointer(uint pointer, uint offset)
+        {
+            byte[] bytes = new byte[24];
+
+            //Creating the address (reading the Base and add the offset)
+            uint adress = (uint)Read(pointer) + offset;
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)adress, bytes, (UIntPtr)sizeof(double), 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToDouble(bytes, 0);
+
+        }
+
+        public double ReadDouble(uint pointer)
+        {
+            byte[] bytes = new byte[24];
+
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)pointer, bytes, (UIntPtr)sizeof(double), 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToDouble(bytes, 0);
+        }
+
+        //String
+        public string ReadStringPointer(uint pointer, uint offset, int blen)
+        {
+            byte[] bytes = new byte[24];
+
+            //Creating the address (reading the Base and add the offset)
+            uint adress = (uint)Read(pointer) + offset;
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)adress, bytes, (UIntPtr)blen, 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToString(bytes, 0);
+
+        }
+
+        public string ReadString(uint pointer, int blen)
+        {
+            byte[] bytes = new byte[24];
+
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)pointer, bytes, (UIntPtr)blen, 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToString(bytes, 0);
+        }
+
+        //Used for pointers
+        public int Read(uint pointer)
+        {
+            byte[] bytes = new byte[24];
+
+            //Reading the specific address within the process
+            ReadProcessMemory(Handle, (IntPtr)pointer, bytes, (UIntPtr)sizeof(int), 0);
+            //Return the result as 4 byte int
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        //Memory writing
+
+        //Byte
+        public void WriteBytePointer(uint pointer, uint offset, byte[] Buffer, int blen)
+        {
+            uint adress = (uint)Read(pointer) + offset;
+            WriteProcessMemory(Handle, (IntPtr)adress, Buffer, (UIntPtr)blen, 0);
+        }
+
+        public void WriteByte(uint pointer, byte[] Buffer, int blen)
+        {
+            WriteProcessMemory(Handle, (IntPtr)pointer, Buffer, (UIntPtr)blen, 0);
+        }
+
+        //Double
+        public void WriteDoublePointer(uint pointer, uint offset, byte[] Buffer, int blen)
+        {
+            uint adress = (uint)Read(pointer) + offset;
+            WriteProcessMemory(Handle, (IntPtr)adress, Buffer, (UIntPtr)sizeof(double), 0);
+        }
+
+        public void WriteDouble(uint pointer, byte[] Buffer, int blen)
+        {
+            WriteProcessMemory(Handle, (IntPtr)pointer, Buffer, (UIntPtr)sizeof(double), 0);
+        }
+
+        //Float
+        public void WriteFloatPointer(uint pointer, uint offset, byte[] Buffer)
+        {
+            uint adress = (uint)Read(pointer) + offset;
+            WriteProcessMemory(Handle, (IntPtr)adress, Buffer, (UIntPtr)sizeof(float), 0);
+        }
+
+        public void WriteFloat(uint pointer, byte[] Buffer)
+        {
+            WriteProcessMemory(Handle, (IntPtr)pointer, Buffer, (UIntPtr)sizeof(float), 0);
+        }
+
+        //String
+        public void WriteStringPointer(uint pointer, uint offset, byte[] Buffer, int blen)
+        {
+            uint adress = (uint)Read(pointer) + offset;
+            WriteProcessMemory(Handle, (IntPtr)adress, Buffer, (UIntPtr)blen, 0);
+        }
+
+        public void WriteString(uint pointer, byte[] Buffer, int blen)
+        {
+            WriteProcessMemory(Handle, (IntPtr)pointer, Buffer, (UIntPtr)blen, 0);
+        }
+    }
+}

@@ -1,4 +1,4 @@
-# Vice City - Custom Mission Loader
+# Vice City - Custom Mission Loader (SCM)
 ### Info
 Simple tool to make the game load the main.scm file from another directory.
 ### How it works
